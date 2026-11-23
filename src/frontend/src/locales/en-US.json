@@ -1,0 +1,183 @@
+{
+  "app": {
+    "brandMain": "CAREER",
+    "brandAccent": "PILOT",
+    "tagline": "Local Career Intelligence",
+    "nav": {
+      "ariaLabel": "Main navigation",
+      "profile": "My Profile",
+      "interview": "Interview",
+      "jobs": "Jobs & ATS",
+      "reply": "Reply",
+      "analyzeCta": "Analyze Job"
+    },
+    "hero": {
+      "titlePart1": "Right resume for the right job.",
+      "titlePart2": "Less ghosting.",
+      "titlePart3": "More interviews.",
+      "subtitle": "Paste a job description, generate an ATS-tailored resume in docs/curriculo, prepare your PDF interview guide, and reply to recruiters in the right language.",
+      "badgeLocal": "100% Local-First",
+      "badgeReady": "MCP + ATS Ready"
+    },
+    "lang": {
+      "pt": "PT-br",
+      "en": "EN-us"
+    }
+  },
+  "profile": {
+    "stepTitle": "Base Resume",
+    "subtitlePrefix": "Your base resume is never overwritten. Upload a",
+    "subtitleOr": "or",
+    "subtitleSuffix": "file, or paste the text below.",
+    "fullNameLabel": "Full name",
+    "emailLabel": "Email",
+    "optional": "(optional)",
+    "fullNamePlaceholder": "e.g. Sergio Chaves",
+    "emailPlaceholder": "e.g. sergio@email.com",
+    "uploadLabel": "File upload (.pdf or .docx)",
+    "selectFile": "Select file",
+    "removeFileAria": "Remove file",
+    "pasteLabel": "Or paste your resume text",
+    "pasteDisabledPlaceholder": "File selected. Remove the file above if you prefer to paste text.",
+    "pastePlaceholder": "Paste your resume, experience, tech stack, and education here...",
+    "saveButton": "Save Profile",
+    "savingButton": "Saving...",
+    "updateButton": "Update Profile",
+    "updatingButton": "Updating...",
+    "editingBanner": "Editing profile #{{id}} ({{name}}). Saving will trigger background reanalysis of linked jobs.",
+    "cancelEdit": "Cancel edit",
+    "latestTitle": "Latest Saved Profile",
+    "latestMeta": "{{count}} characters · Saved on {{date}}",
+    "list": {
+      "title": "Registered Profiles",
+      "empty": "No profiles registered yet.",
+      "unnamed": "Unnamed candidate",
+      "noEmail": "No email provided",
+      "updatedAt": "Updated on {{date}}",
+      "editBtn": "Update",
+      "deleteBtn": "Delete"
+    },
+    "deleteModal": {
+      "title": "Permanently delete profile?",
+      "description": "Are you sure you want to delete profile #{{id}} ({{name}})? All analyzed jobs, Q&A history, and data linked to this profile will also be permanently removed.",
+      "confirm": "Yes, delete all",
+      "cancel": "Cancel"
+    },
+    "errors": {
+      "invalidFormat": "Invalid format. Please select a .pdf or .docx file.",
+      "emptyInput": "Please upload a file (.pdf or .docx) or paste your resume text.",
+      "saveFailed": "Error saving profile.",
+      "deleteFailed": "Error deleting profile."
+    },
+    "successSaved": "Profile #{{id}} saved successfully ({{count}} characters extracted).",
+    "successUpdated": "Profile #{{id}} updated successfully. Job reanalysis started in the background."
+  },
+  "interview": {
+    "title": "Profile Interview",
+    "subtitle": "Answer the questions saved in ProfileQA to enrich your ATS resume.",
+    "generateAiButton": "Generate 3 Questions (AI)",
+    "generatingAiButton": "Generating...",
+    "refreshButton": "Refresh",
+    "loading": "Loading questions from database...",
+    "emptyState": "No questions saved yet. Click Generate 3 Questions (AI) or add one below.",
+    "questionLabel": "Question #{{id}}",
+    "savedBadge": "Saved",
+    "editAnswer": "Edit answer",
+    "answerPlaceholder": "Type your answer here...",
+    "cancel": "Cancel",
+    "saveAnswer": "Save Answer",
+    "saving": "Saving...",
+    "addQuestionPlaceholder": "Add a new question to ProfileQA...",
+    "addQuestionButton": "Add Question",
+    "errors": {
+      "loadFailed": "Error loading questions.",
+      "generateFailed": "Error generating questions.",
+      "emptyAnswer": "Please enter an answer before saving.",
+      "saveFailed": "Error saving answer.",
+      "createFailed": "Error creating question."
+    }
+  },
+  "jobs": {
+    "formTitle": "Paste a job to Match",
+    "formSubtitle": "We analyze requirements via MCP, compute your match score, and generate an ATS resume + PDF interview guide in the job's language.",
+    "titleLabel": "Job Title",
+    "companyLabel": "Company",
+    "urlLabel": "Job URL",
+    "optional": "(optional)",
+    "titlePlaceholder": "e.g. Senior .NET Software Engineer",
+    "companyPlaceholder": "e.g. InComm Payments",
+    "urlPlaceholder": "https://...",
+    "descriptionLabel": "Job description or recruiter message",
+    "descriptionPlaceholder": "Paste the job description here (in English or Portuguese)...",
+    "analyzeButton": "Analyze Job",
+    "analyzingButton": "Analyzing...",
+    "listTitle": "Analyzed Jobs",
+    "loading": "Loading jobs...",
+    "emptyState": "No jobs analyzed yet.",
+    "matchLabel": "MATCH",
+    "status": {
+      "UpToDate": "Up to date",
+      "Reanalyzing": "Reanalyzing in background...",
+      "Error": "Reanalysis error"
+    },
+    "tabAnalysis": "Analysis & Match",
+    "tabAts": "Generate ATS Resume",
+    "downloadGuidePdf": "Download Guide PDF",
+    "generatingGuidePdf": "Generating Guide...",
+    "strengthsTitle": "Strengths",
+    "gapsTitle": "Gaps & Study Plan",
+    "milestonesPrompt": "Select the learnings / technical milestones to inject into this resume",
+    "addMilestoneTitle": "Add new learning manually",
+    "milestoneTitlePlaceholder": "Learning / milestone title...",
+    "milestoneTagsPlaceholder": "Tags (e.g. .NET 10, Redis, Docker)",
+    "milestoneDescPlaceholder": "Concise description of technical impact...",
+    "saveMilestone": "Save Learning",
+    "savingMilestone": "Saving...",
+    "previewAtsButton": "Generate ATS Preview",
+    "downloadPdfButton": "Download PDF",
+    "downloadDocxButton": "Download DOCX",
+    "previewHeader": "ATS Preview ({{lang}}) — {{fileName}}",
+    "previewIframeTitle": "ATS Preview Job {{id}}",
+    "atsSavedNotice": "ATS Resume \"{{fileName}}\" generated and saved to docs/curriculo/.",
+    "telemetry": {
+      "title": "Observability & Costs (AiExecutionLogs)",
+      "executions": "Executions",
+      "avgLatency": "Avg latency",
+      "tokens": "Tokens",
+      "estimatedCost": "Est. cost",
+      "colProvider": "Provider",
+      "colModel": "Model",
+      "colLatency": "Latency",
+      "colTokens": "Tokens (In/Out)",
+      "colCost": "Cost (USD)",
+      "fallbackBadge": "fallback"
+    },
+    "errors": {
+      "loadFailed": "Error loading jobs.",
+      "missingDescriptionOrUrl": "Please provide a job description or a job URL.",
+      "analyzeFailed": "Error analyzing job.",
+      "guidePdfFailed": "Error generating Guide PDF.",
+      "previewFailed": "Error generating ATS preview.",
+      "exportFailed": "Error exporting {{format}}.",
+      "saveMilestoneFailed": "Error saving learning."
+    }
+  },
+  "reply": {
+    "title": "Recruiter Reply",
+    "subtitle": "Professional messages ready for LinkedIn and WhatsApp in the same language as the job posting.",
+    "generateButton": "Generate Reply",
+    "regenerateButton": "Regenerate Reply",
+    "loading": "Loading jobs...",
+    "emptyJobs": "No jobs registered yet. Analyze a job in the Jobs & ATS tab first.",
+    "selectJobLabel": "Select the received job",
+    "emptyReply": "This job does not have a generated reply yet. Click Generate Reply above.",
+    "linkedin": "LinkedIn",
+    "whatsapp": "WhatsApp",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "errors": {
+      "loadFailed": "Error loading jobs.",
+      "generateFailed": "Error generating reply."
+    }
+  }
+}

@@ -1,0 +1,183 @@
+{
+  "app": {
+    "brandMain": "CAREER",
+    "brandAccent": "PILOT",
+    "tagline": "Inteligência de Carreira Local",
+    "nav": {
+      "ariaLabel": "Navegação principal",
+      "profile": "Meu Perfil",
+      "interview": "Entrevista",
+      "jobs": "Vagas & ATS",
+      "reply": "Resposta",
+      "analyzeCta": "Analisar Vaga"
+    },
+    "hero": {
+      "titlePart1": "Currículo certo para a vaga certa.",
+      "titlePart2": "Menos ghost.",
+      "titlePart3": "Mais entrevistas.",
+      "subtitle": "Cole a vaga, gere seu currículo adaptado para ATS em docs/curriculo, prepare seu guia de entrevista em PDF e responda recrutadores no idioma certo.",
+      "badgeLocal": "100% Local-First",
+      "badgeReady": "MCP + ATS Ready"
+    },
+    "lang": {
+      "pt": "PT-br",
+      "en": "EN-us"
+    }
+  },
+  "profile": {
+    "stepTitle": "Currículo Base",
+    "subtitlePrefix": "Seu currículo base nunca é sobrescrito. Envie um",
+    "subtitleOr": "ou",
+    "subtitleSuffix": "ou cole o texto abaixo.",
+    "fullNameLabel": "Nome completo",
+    "emailLabel": "E-mail",
+    "optional": "(opcional)",
+    "fullNamePlaceholder": "Ex: Sergio Chaves",
+    "emailPlaceholder": "Ex: sergio@email.com",
+    "uploadLabel": "Upload de arquivo (.pdf ou .docx)",
+    "selectFile": "Selecionar arquivo",
+    "removeFileAria": "Remover arquivo",
+    "pasteLabel": "Ou cole o texto do currículo",
+    "pasteDisabledPlaceholder": "Arquivo selecionado. Remova o arquivo acima caso prefira colar o texto.",
+    "pastePlaceholder": "Cole aqui o conteúdo do seu currículo, experiências, tecnologias e formação...",
+    "saveButton": "Salvar Perfil",
+    "savingButton": "Salvando...",
+    "updateButton": "Atualizar Perfil",
+    "updatingButton": "Atualizando...",
+    "editingBanner": "Editando perfil #{{id}} ({{name}}). Ao salvar, as vagas vinculadas serão reanalisadas em segundo plano.",
+    "cancelEdit": "Cancelar edição",
+    "latestTitle": "Último Perfil Salvo",
+    "latestMeta": "{{count}} caracteres · Salvo em {{date}}",
+    "list": {
+      "title": "Perfis Cadastrados",
+      "empty": "Nenhum perfil cadastrado ainda.",
+      "unnamed": "Nome não identificado",
+      "noEmail": "E-mail não informado",
+      "updatedAt": "Atualizado em {{date}}",
+      "editBtn": "Atualizar",
+      "deleteBtn": "Deletar"
+    },
+    "deleteModal": {
+      "title": "Excluir perfil permanentemente?",
+      "description": "Tem certeza que deseja excluir o perfil #{{id}} ({{name}})? Todas as vagas analisadas, histórico de Q&A e dados vinculados a este perfil também serão removidos permanentemente.",
+      "confirm": "Sim, deletar tudo",
+      "cancel": "Cancelar"
+    },
+    "errors": {
+      "invalidFormat": "Formato inválido. Selecione um arquivo .pdf ou .docx.",
+      "emptyInput": "Envie um arquivo (.pdf ou .docx) ou cole o texto do seu currículo.",
+      "saveFailed": "Erro ao salvar perfil.",
+      "deleteFailed": "Erro ao deletar perfil."
+    },
+    "successSaved": "Perfil #{{id}} salvo com sucesso ({{count}} caracteres extraídos).",
+    "successUpdated": "Perfil #{{id}} atualizado com sucesso. Reanálise das vagas iniciada em segundo plano."
+  },
+  "interview": {
+    "title": "Entrevista de Perfil",
+    "subtitle": "Responda às perguntas salvas em ProfileQA para enriquecer seu currículo ATS.",
+    "generateAiButton": "Gerar 3 Perguntas (IA)",
+    "generatingAiButton": "Gerando...",
+    "refreshButton": "Atualizar",
+    "loading": "Carregando perguntas do banco...",
+    "emptyState": "Nenhuma pergunta salva ainda. Clique em Gerar 3 Perguntas (IA) ou adicione uma abaixo.",
+    "questionLabel": "Pergunta #{{id}}",
+    "savedBadge": "Salva",
+    "editAnswer": "Editar resposta",
+    "answerPlaceholder": "Digite sua resposta aqui...",
+    "cancel": "Cancelar",
+    "saveAnswer": "Salvar Resposta",
+    "saving": "Salvando...",
+    "addQuestionPlaceholder": "Adicionar nova pergunta ao ProfileQA...",
+    "addQuestionButton": "Adicionar Pergunta",
+    "errors": {
+      "loadFailed": "Erro ao carregar perguntas.",
+      "generateFailed": "Erro ao gerar perguntas.",
+      "emptyAnswer": "Digite uma resposta antes de salvar.",
+      "saveFailed": "Erro ao salvar resposta.",
+      "createFailed": "Erro ao criar pergunta."
+    }
+  },
+  "jobs": {
+    "formTitle": "Cole a vaga para dar Match",
+    "formSubtitle": "Analisamos requisitos com MCP, calculamos seu match e geramos currículo ATS + guia de entrevista no idioma da vaga.",
+    "titleLabel": "Cargo",
+    "companyLabel": "Empresa",
+    "urlLabel": "URL da vaga",
+    "optional": "(opcional)",
+    "titlePlaceholder": "Ex: Senior .NET Software Engineer",
+    "companyPlaceholder": "Ex: InComm Payments",
+    "urlPlaceholder": "https://...",
+    "descriptionLabel": "Descrição da vaga ou mensagem recebida",
+    "descriptionPlaceholder": "Cole aqui a descrição da vaga (em português ou inglês)...",
+    "analyzeButton": "Analisar Vaga",
+    "analyzingButton": "Analisando...",
+    "listTitle": "Vagas Analisadas",
+    "loading": "Carregando vagas...",
+    "emptyState": "Nenhuma vaga analisada ainda.",
+    "matchLabel": "MATCH",
+    "status": {
+      "UpToDate": "Atualizada",
+      "Reanalyzing": "Reanalisando em 2º plano...",
+      "Error": "Erro na reanálise"
+    },
+    "tabAnalysis": "Análise & Match",
+    "tabAts": "Gerar Currículo ATS",
+    "downloadGuidePdf": "Baixar Guia PDF",
+    "generatingGuidePdf": "Gerando Guia...",
+    "strengthsTitle": "Pontos Fortes",
+    "gapsTitle": "Gaps & Plano de Estudos",
+    "milestonesPrompt": "Selecione os aprendizados / marcos técnicos para injetar neste currículo",
+    "addMilestoneTitle": "Adicionar novo aprendizado manualmente",
+    "milestoneTitlePlaceholder": "Título do aprendizado/marco...",
+    "milestoneTagsPlaceholder": "Tags (ex: .NET 10, Redis, Docker)",
+    "milestoneDescPlaceholder": "Descrição objetiva do impacto técnico...",
+    "saveMilestone": "Salvar Aprendizado",
+    "savingMilestone": "Salvando...",
+    "previewAtsButton": "Gerar Preview ATS",
+    "downloadPdfButton": "Baixar PDF",
+    "downloadDocxButton": "Baixar DOCX",
+    "previewHeader": "Preview ATS ({{lang}}) — {{fileName}}",
+    "previewIframeTitle": "Preview ATS Vaga {{id}}",
+    "atsSavedNotice": "Currículo ATS \"{{fileName}}\" gerado e salvo em docs/curriculo/.",
+    "telemetry": {
+      "title": "Observabilidade & Custos (AiExecutionLogs)",
+      "executions": "Execuções",
+      "avgLatency": "Latência média",
+      "tokens": "Tokens",
+      "estimatedCost": "Custo est.",
+      "colProvider": "Provedor",
+      "colModel": "Modelo",
+      "colLatency": "Latência",
+      "colTokens": "Tokens (In/Out)",
+      "colCost": "Custo (USD)",
+      "fallbackBadge": "fallback"
+    },
+    "errors": {
+      "loadFailed": "Erro ao carregar vagas.",
+      "missingDescriptionOrUrl": "Informe a descrição da vaga ou a URL da vaga.",
+      "analyzeFailed": "Erro ao analisar vaga.",
+      "guidePdfFailed": "Erro ao gerar Guia PDF.",
+      "previewFailed": "Erro ao gerar preview ATS.",
+      "exportFailed": "Erro ao exportar {{format}}.",
+      "saveMilestoneFailed": "Erro ao salvar aprendizado."
+    }
+  },
+  "reply": {
+    "title": "Resposta ao Recrutador",
+    "subtitle": "Mensagens profissionais prontas para LinkedIn e WhatsApp no mesmo idioma da vaga.",
+    "generateButton": "Gerar Resposta",
+    "regenerateButton": "Regerar Resposta",
+    "loading": "Carregando vagas...",
+    "emptyJobs": "Nenhuma vaga cadastrada ainda. Analise uma vaga na aba Vagas & ATS primeiro.",
+    "selectJobLabel": "Selecione a vaga recebida",
+    "emptyReply": "Esta vaga ainda não possui resposta gerada. Clique em Gerar Resposta acima.",
+    "linkedin": "LinkedIn",
+    "whatsapp": "WhatsApp",
+    "copy": "Copiar",
+    "copied": "Copiado!",
+    "errors": {
+      "loadFailed": "Erro ao carregar vagas.",
+      "generateFailed": "Erro ao gerar resposta."
+    }
+  }
+}
