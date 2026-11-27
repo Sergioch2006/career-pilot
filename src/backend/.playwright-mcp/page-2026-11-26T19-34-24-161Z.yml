@@ -1,0 +1,298 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e5]:
+      - link "GoGloby" [ref=e7] [cursor=pointer]:
+        - /url: https://gogloby.com
+        - img "Site logo" [ref=e8]
+      - button "Main Menu" [ref=e9] [cursor=pointer]
+  - main [ref=e13]:
+    - article [ref=e14]:
+      - generic [ref=e17]:
+        - generic:
+          - img "Background"
+          - img "Background"
+        - generic [ref=e18]:
+          - generic [ref=e19]: About GoGloby
+          - heading "The Data and AI Engineer Staffing and Recruiting Agency" [level=1] [ref=e20]
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - generic:
+            - img "Background"
+          - heading "Company Details" [level=3] [ref=e28]
+          - generic [ref=e29]:
+            - generic [ref=e30]:
+              - generic [ref=e31]: Full Legal Entity Name
+              - paragraph [ref=e33]: GoGloby LLC, a Delaware LLC (United States)
+            - generic [ref=e34]:
+              - generic [ref=e35]: Category
+              - paragraph [ref=e37]: Engineering-led staffing and recruiting agency specializing in Data and AI Engineers
+            - generic [ref=e38]:
+              - generic [ref=e39]: Who we serve
+              - paragraph [ref=e41]: VC-backed startups and global enterprises
+            - generic [ref=e42]:
+              - generic [ref=e43]: Founded
+              - paragraph [ref=e45]: "2021"
+            - generic [ref=e46]:
+              - generic [ref=e47]: Founders
+              - paragraph [ref=e49]:
+                - link "Sergey Matikaynen" [ref=e50] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/in/sergeymatikaynen/
+                - text: and
+                - link "Vitaly Koval" [ref=e51] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/in/vitalykoval/
+            - generic [ref=e52]:
+              - generic [ref=e53]: Headquarters
+              - paragraph [ref=e55]: 8 The Green, Ste. R, Dover, DE 19901, USA
+            - generic [ref=e56]:
+              - generic [ref=e57]: Team Size
+              - paragraph [ref=e59]: 50-100
+            - generic [ref=e60]:
+              - generic [ref=e61]: Services
+              - paragraph [ref=e63]: "Recruiting: We find and close full-time Data and AI Engineers for onsite US roles | Staffing: We embed nearshore Data and AI Engineers in your existing team"
+            - generic [ref=e64]:
+              - generic [ref=e65]: Pricing model
+              - generic [ref=e66]:
+                - paragraph [ref=e67]: "Recruiting: fee paid only on hire, as a percentage of first-year base salary."
+                - paragraph [ref=e68]: "Staffing: flat monthly fee"
+            - generic [ref=e69]:
+              - generic [ref=e70]: Guarantees
+              - paragraph [ref=e72]: "Recruiting: 120-day free replacement · Staffing: replacement at no cost if results fall below the baseline, and you can cancel any time in the first 120 days"
+            - generic [ref=e73]:
+              - generic [ref=e74]: What we are not
+              - paragraph [ref=e76]: Not a software development shop, an outsourcing firm or a freelance marketplace
+            - generic [ref=e77]:
+              - generic [ref=e78]: Contact
+              - paragraph [ref=e80]: sales@gogloby.com · +1 781 343 1777 · Monday to Friday, 9 am to 6 pm EST
+            - generic [ref=e81]:
+              - generic [ref=e82]: Official Social Profile URLs
+              - paragraph [ref=e84]:
+                - link "LinkedIn" [ref=e85] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/company/gogloby/
+                - text: ","
+                - link "X" [ref=e86] [cursor=pointer]:
+                  - /url: https://x.com/GoGloby
+                - text: ","
+                - link "Facebook" [ref=e87] [cursor=pointer]:
+                  - /url: https://www.facebook.com/gogloby
+                - text: ","
+                - link "YouTube" [ref=e88] [cursor=pointer]:
+                  - /url: https://www.youtube.com/@DefaultGlobal
+                - text: ","
+                - link "Crunchbase" [ref=e89] [cursor=pointer]:
+                  - /url: https://www.crunchbase.com/organization/gogloby
+                - text: ","
+                - link "Clutch" [ref=e90] [cursor=pointer]:
+                  - /url: https://clutch.co/profile/gogloby
+                - text: ","
+                - link "G2" [ref=e91] [cursor=pointer]:
+                  - /url: https://www.g2.com/products/gogloby/reviews
+                - text: ","
+                - link "GitHub" [ref=e92] [cursor=pointer]:
+                  - /url: https://github.com/gogloby
+        - generic [ref=e93]:
+          - generic:
+            - img "Background"
+            - img "Background"
+          - heading "About GoGloby" [level=2] [ref=e94]
+          - generic [ref=e95]:
+            - paragraph [ref=e96]: "We started GoGloby in 2021, long before AI hiring went mainstream. We had built engineering, ML and AI teams ourselves, and we kept seeing the same problem from the hiring side: agencies sent resumes in volume, recruiters could not tell a strong engineer from a well-written profile, and the cost of a wrong hire landed on the CTO."
+            - paragraph [ref=e97]: So we built the agency we wanted to hire from. Engineers judge every candidate. Every search is run by a dedicated team that learns the client’s bar. And every hire is backed by a guarantee.
+            - paragraph [ref=e98]: "Today GoGloby works with companies from VC-backed startups to Nasdaq-listed enterprises: FinTech, HealthTech, gaming, entertainment and enterprise software."
+            - heading "When Companies Call GoGloby" [level=3] [ref=e99]
+            - list [ref=e100]:
+              - listitem [ref=e101]:
+                - strong [ref=e102]: The first AI hire.
+                - text: A new AI function needs its first leader or founding engineer, and a wrong hire sets the direction for everyone after.
+              - listitem [ref=e103]:
+                - strong [ref=e104]: The search that will not close.
+                - text: A Data or AI role has been open for months, and the shortlists keep failing engineering’s interviews.
+              - listitem [ref=e105]:
+                - strong [ref=e106]: The roadmap that cannot wait.
+                - text: The product needs senior engineers now, faster than US hiring allows.
+              - listitem [ref=e107]:
+                - strong [ref=e108]: No view after the hire.
+                - text: The team is growing, but nobody can see what each engineer ships or what AI really costs.
+            - heading "Two Ways to Build Your Team" [level=3] [ref=e109]
+            - list [ref=e110]:
+              - listitem [ref=e111]:
+                - strong [ref=e112]: Recruiting.
+                - text: We find, vet and place full-time Data and AI Engineers and AI leaders on your payroll, onsite or hybrid in the US. You pay only on hire, and every hire carries a 120-day replacement guarantee.
+              - listitem [ref=e113]:
+                - strong [ref=e114]: Staffing.
+                - text: We embed senior Data and AI Engineers in your team. They are based in Latin America and work US hours, inside your sprints, under your leads. The AI Development Intelligence Layer shows each engineer’s velocity and AI cost per shipped feature, sprint by sprint.
+            - heading "Why GoGloby Is Different from Other Agencies" [level=3] [ref=e115]
+            - paragraph [ref=e116]:
+              - strong [ref=e117]: Vetting by engineers.
+              - text: Every candidate goes through a 4-stage technical assessment judged by engineers. They write a spec from a loose requirement, refactor a real 50,000-line codebase with AI coding tools, design a system under production constraints and handle a live production incident. A culture interview, reference checks and a background check follow. About 4% of candidates pass.
+            - paragraph [ref=e118]:
+              - strong [ref=e119]: Visibility after the hire.
+              - text: Our AI Development Intelligence Layer integrates into your engineering process. Sprint by sprint, it shows each engineer’s velocity, the AI cost of every shipped feature and how much each engineer really uses AI tools. It reads metadata only and never touches your source code.
+            - paragraph [ref=e120]:
+              - strong [ref=e121]: A guarantee few agencies offer.
+              - text: If a hire does not work out within 120 days, we find a replacement at no cost.
+            - heading "Featured Clients:" [level=3] [ref=e122]
+            - paragraph [ref=e123]: Hasbro ($4.1B revenue); Deel ($17.3B valuation); Keywords Studios (acquired for $2.8B); EverCommerce (740K+ SMB customers); DrChrono (17.8M+ patients, $4.9B revenue); Devsisters (300M+ users); MikeWorldWide (~$100M revenue); Zillow ($2.2B revenue); TATA ($165B+ group revenue); Canopy ($285M raised); Databento ($127M raised)
+      - generic [ref=e126]:
+        - heading "GoGloby Founders" [level=2] [ref=e129]
+        - generic [ref=e131]:
+          - group "1 / 2" [ref=e132]:
+            - generic [ref=e135]:
+              - heading "Sergey Matikaynen, Co-Founder" [level=3] [ref=e136]
+              - paragraph [ref=e138]: "Sergey has spent 17 years building software systems, engineering organizations and production platforms, including at SAP. He has built and managed ML, AI and engineering teams for highly regulated sectors such as payments, finance and HealthTech. At GoGloby he leads the technology behind AI-native engineering: agent orchestration, SDLC automation, developer telemetry, security and engineering economics."
+          - group "2 / 2" [ref=e139]:
+            - generic [ref=e142]:
+              - heading "Vitaly Koval, Co-Founder" [level=3] [ref=e143]
+              - paragraph [ref=e145]: Vitaly shapes GoGloby’s vision and growth and leads sales and marketing. For about a decade he has helped engineering leaders scale teams across the US, Canada, Latin America and Europe. He is an entrepreneur, an industry speaker and a former LinkedIn Top Voice, and his work has been featured on CNN, Forbes, NBC and CBS.
+      - generic [ref=e148]:
+        - generic [ref=e150]:
+          - heading "Contact Us" [level=2] [ref=e151]
+          - paragraph [ref=e153]: Tell us the role and your stack. We’ll send vetted profiles for staffing or start a search for a full-time hire.
+        - generic [ref=e155]:
+          - group [ref=e157]:
+            - textbox "Name" [ref=e159]
+            - textbox "Email" [ref=e161]
+            - textbox "Message" [ref=e163]
+          - generic [ref=e164]:
+            - paragraph [ref=e167]:
+              - text: I have read and accepted the
+              - link "Terms & Conditions" [ref=e168] [cursor=pointer]:
+                - /url: /terms-and-conditions/
+              - text: and
+              - link "Privacy Policy" [ref=e169] [cursor=pointer]:
+                - /url: /privacy-policy/
+            - generic [ref=e171]:
+              - button "Send" [disabled]
+        - generic [ref=e173]:
+          - heading "Trusted by" [level=3] [ref=e175]
+          - heading "Featured by" [level=3] [ref=e189]
+          - heading "Awarded by" [level=3] [ref=e202]
+          - heading "We follow data & security practices:" [level=3] [ref=e211]
+      - generic [ref=e218]:
+        - heading "FAQ" [level=2] [ref=e220]
+        - generic [ref=e222]:
+          - generic [ref=e223]:
+            - button "What is GoGloby?" [ref=e224] [cursor=pointer]
+            - paragraph [ref=e229]: "GoGloby is an engineering-led staffing and recruiting agency specializing in Data and AI Engineers. Since 2021, we have built dozens of Data and AI engineering teams for VC-backed startups and global enterprises. We do it two ways: we recruit full-time engineers for onsite US roles, and we embed nearshore engineers in existing teams. Every candidate is vetted by engineers and backed by a 120-day guarantee."
+          - generic [ref=e230]:
+            - button "What services does GoGloby offer?" [ref=e231] [cursor=pointer]
+            - paragraph [ref=e236]: "GoGloby offers two services for hiring Data and AI Engineers: 1) Recruiting: We find and close full-time Data and AI Engineers for onsite US roles. You pay only on hire, with a 120-day guarantee. We also run AI executive search for AI leaders; 2) Staffing: We embed nearshore Data and AI Engineers in your existing team, on US hours, for a flat monthly fee, with built-in telemetry on velocity and AI cost."
+          - generic [ref=e237]:
+            - button "Who does GoGloby work with?" [ref=e238] [cursor=pointer]
+            - paragraph [ref=e243]: "GoGloby works with VC-backed startups and global enterprises. Companies typically engage GoGloby at one of five points: the first AI hire, an AI search that will not close, no way to test real AI skills, a headcount freeze, or no view after the hire."
+          - generic [ref=e244]:
+            - button "Where is GoGloby based, and since when?" [ref=e245] [cursor=pointer]
+            - paragraph [ref=e250]: GoGloby was founded in 2021 and is headquartered in Dover, Delaware.
+          - generic [ref=e251]:
+            - button "How is GoGloby different from other AI staffing and recruiting agencies?" [ref=e252] [cursor=pointer]
+            - paragraph [ref=e257]: As an engineering-led agency, GoGloby differs in three ways. Every candidate is vetted by engineers, not recruiters, in a 4-stage assessment that only 4% pass. Every engineer we embed comes with built-in telemetry on velocity and AI cost. And every engineer is backed by an unprecedented 120-day guarantee.
+          - generic [ref=e258]:
+            - button "What does" [ref=e259] [cursor=pointer]:
+              - generic [ref=e260]: What does “engineering-led” mean?
+            - paragraph [ref=e264]: "Engineering-led means the people who run GoGloby and judge every candidate are engineers, not recruiters. We have built and led engineering, ML and AI teams ourselves, so we assess candidates the way a hiring CTO would: on real code, not on a resume."
+          - generic [ref=e265]:
+            - button "How does GoGloby vet engineers, and who does the vetting?" [ref=e266] [cursor=pointer]
+            - paragraph [ref=e271]: "Engineers do the vetting, not recruiters. Every candidate goes through a 4-stage technical assessment: they write a spec from a loose requirement, refactor a real 50,000-line codebase with AI coding tools, design a system under production constraints, and handle a live production incident. A culture-fit interview, reference checks and a background check follow. Only 4% pass."
+          - generic [ref=e272]:
+            - button "What guarantees does GoGloby offer?" [ref=e273] [cursor=pointer]
+            - paragraph [ref=e278]: GoGloby backs every engineer with a 120-day guarantee. In recruiting, you pay only on hire, and if the hire does not work out within 120 days, we find a replacement at no cost. In staffing, built-in telemetry tracks results from the first sprint, and if their performance falls, we replace the engineer at no additional cost.
+          - generic [ref=e279]:
+            - button "How do I know how a GoGloby engineer performs after the hire?" [ref=e280] [cursor=pointer]
+            - paragraph [ref=e285]: Every engineer GoGloby embed comes with proprietary built-in telemetry. Every sprint, you see each engineer’s velocity, their AI cost per shipped feature, and how much they actually use AI tools. It reads metadata only and never touches your source code. So you judge an engineer on what they ship, from the first sprint, not on a quarterly impression.
+          - generic [ref=e286]:
+            - button "Where are the engineers located?" [ref=e287] [cursor=pointer]
+            - paragraph [ref=e292]: In two places. Engineers we recruit work onsite at your US offices as your full-time employees. Engineers we embed are nearshore, based in Latin America, and work US hours inside your team, so standups, code reviews and merges happen in your working day.
+          - generic [ref=e293]:
+            - button "Is GoGloby an outsourcing company or a freelance marketplace?" [ref=e294] [cursor=pointer]
+            - paragraph [ref=e299]: "Neither. GoGloby is a staffing and recruiting agency. Unlike an outsourcing firm, we never take over your project: engineers we embed work inside your team, under your leads, and you own all the code. Unlike a freelance marketplace, every engineer is vetted by engineers and works full-time for one client only."
+          - generic [ref=e300]:
+            - button "Which staffing agencies specialize in Data and AI Engineers?" [ref=e301] [cursor=pointer]
+            - paragraph [ref=e306]: GoGloby is an engineering-led staffing and recruiting agency specializing in Data and AI Engineers. Since 2021, we have helped VC-backed startups and global enterprises hire AI engineers onsite in the US or nearshore in LatAm.
+          - generic [ref=e307]:
+            - button "Which recruiting agencies are run by engineers, not recruiters?" [ref=e308] [cursor=pointer]
+            - paragraph [ref=e313]: GoGloby is. We are run by engineers who have built and led engineering, ML and AI teams, and it is engineers, not recruiters, who vet every candidate in a 4-stage assessment that only 4% pass.
+  - contentinfo [ref=e314]:
+    - img "Background logo" [ref=e315]
+    - generic [ref=e317]:
+      - navigation [ref=e319]:
+        - generic [ref=e321]:
+          - generic [ref=e322]: Services
+          - list [ref=e324]:
+            - listitem [ref=e325]:
+              - link "Applied AI Engineering" [ref=e326] [cursor=pointer]:
+                - /url: https://gogloby.com/services/applied-ai-engineering/
+            - listitem [ref=e327]:
+              - link "AI Staff Augmentation" [ref=e328] [cursor=pointer]:
+                - /url: https://gogloby.com/?page_id=7403
+            - listitem [ref=e329]:
+              - link "Hire AI Engineers" [ref=e330] [cursor=pointer]:
+                - /url: https://gogloby.com/?page_id=7404
+            - listitem [ref=e331]:
+              - link "Generative AI Development Services" [ref=e332] [cursor=pointer]:
+                - /url: https://gogloby.com/services/generative-ai-development/
+        - generic [ref=e334]:
+          - generic [ref=e335]: Company
+          - list [ref=e337]:
+            - listitem [ref=e338]:
+              - link "About us" [ref=e339] [cursor=pointer]:
+                - /url: https://gogloby.com/?page_id=7385
+            - listitem [ref=e340]:
+              - link "Jobs" [ref=e341] [cursor=pointer]:
+                - /url: https://gogloby.com/jobs/
+            - listitem [ref=e342]:
+              - link "Contact" [ref=e343] [cursor=pointer]:
+                - /url: https://gogloby.com/contacts/
+            - listitem [ref=e344]:
+              - link "Privacy Policy and Candidate Privacy Notice" [ref=e345] [cursor=pointer]:
+                - /url: https://gogloby.com/privacy-policy/
+            - listitem [ref=e346]:
+              - link "Terms and Conditions" [ref=e347] [cursor=pointer]:
+                - /url: https://gogloby.com/terms-and-conditions/
+        - generic [ref=e349]:
+          - generic [ref=e350]: Resources
+          - list [ref=e352]:
+            - listitem [ref=e353]:
+              - link "Insights" [ref=e354] [cursor=pointer]:
+                - /url: https://gogloby.com/insights/
+            - listitem [ref=e355]:
+              - link "Use Cases" [ref=e356] [cursor=pointer]:
+                - /url: /use-cases/
+            - listitem [ref=e357]:
+              - link "Podcast" [ref=e358] [cursor=pointer]:
+                - /url: https://gogloby.com/podcast/
+            - listitem [ref=e359]:
+              - link "Case Studies" [ref=e360] [cursor=pointer]:
+                - /url: https://gogloby.com/case-study/
+        - generic [ref=e362]:
+          - generic [ref=e363]: Connections
+          - list [ref=e364]:
+            - listitem [ref=e365]:
+              - link "Crunchbase" [ref=e366] [cursor=pointer]:
+                - /url: https://www.crunchbase.com/organization/gogloby
+            - listitem [ref=e367]:
+              - link "LinkedIn" [ref=e368] [cursor=pointer]:
+                - /url: https://www.linkedin.com/company/gogloby/
+            - listitem [ref=e369]:
+              - link "X" [ref=e370] [cursor=pointer]:
+                - /url: https://x.com/GoGloby
+            - listitem [ref=e371]:
+              - link "G2" [ref=e372] [cursor=pointer]:
+                - /url: https://www.g2.com/products/gogloby/reviews
+            - listitem [ref=e373]:
+              - link "Clutch" [ref=e374] [cursor=pointer]:
+                - /url: https://clutch.co/profile/gogloby
+            - listitem [ref=e375]:
+              - link "Trustpilot" [ref=e376] [cursor=pointer]:
+                - /url: https://www.trustpilot.com/review/gogloby.com
+            - listitem [ref=e377]:
+              - link "DesignRush" [ref=e378] [cursor=pointer]:
+                - /url: https://www.designrush.com/agency/profile/gogloby
+            - listitem [ref=e379]:
+              - link "GitHub" [ref=e380] [cursor=pointer]:
+                - /url: https://github.com/gogloby
+            - listitem [ref=e381]:
+              - link "Facebook" [ref=e382] [cursor=pointer]:
+                - /url: https://www.facebook.com/gogloby
+            - listitem [ref=e383]:
+              - link "YouTube" [ref=e384] [cursor=pointer]:
+                - /url: https://www.youtube.com/@DefaultGlobal
+      - generic [ref=e385]: © Copyright 2026, GoGloby. All Rights Reserved.

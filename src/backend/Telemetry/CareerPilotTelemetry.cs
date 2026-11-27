@@ -37,8 +37,8 @@ public static class CareerPilotTelemetry
         var p = provider.Trim().ToLowerInvariant();
         var m = model.Trim().ToLowerInvariant();
 
-        // Ollama local não possui custo por token.
-        if (p == "ollama")
+        // Ollama / modelos locais não possuem custo por token.
+        if (p == "ollama" || m.Contains("llama"))
         {
             return 0m;
         }
@@ -46,8 +46,11 @@ public static class CareerPilotTelemetry
         // Preços aproximados por 1M tokens (input / output)
         var (inputPerMillion, outputPerMillion) = (p, m) switch
         {
-            ("gemini", var gm) when gm.Contains("pro") => (1.25m, 5.00m),
-            ("gemini", _) => (0.075m, 0.30m),
+            ("google" or "gemini", var gm) when gm.Contains("pro") => (1.25m, 5.00m),
+            ("google" or "gemini", _) => (0.075m, 0.30m),
+            ("deepseek", _) => (0.14m, 0.28m),
+            ("qwen", _) => (0.40m, 1.20m),
+            ("kimi", _) => (0.50m, 1.50m),
             ("openai", var om) when om.Contains("gpt-4o-mini") => (0.15m, 0.60m),
             ("openai", _) => (2.50m, 10.00m),
             _ => (0.10m, 0.40m)

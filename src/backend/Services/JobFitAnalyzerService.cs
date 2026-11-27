@@ -38,17 +38,20 @@ public class JobFitAnalyzerService : IJobFitAnalyzerService
     private readonly IChatClient _chatClient;
     private readonly IMcpResearchService _mcpResearchService;
     private readonly IRequestLanguageProvider? _languageProvider;
+    private readonly ILogger<JobFitAnalyzerService>? _logger;
 
     public JobFitAnalyzerService(
         CareerPilotDbContext dbContext,
         IChatClient chatClient,
         IMcpResearchService mcpResearchService,
-        IRequestLanguageProvider? languageProvider = null)
+        IRequestLanguageProvider? languageProvider = null,
+        ILogger<JobFitAnalyzerService>? logger = null)
     {
         _dbContext = dbContext;
         _chatClient = chatClient;
         _mcpResearchService = mcpResearchService;
         _languageProvider = languageProvider;
+        _logger = logger;
     }
 
     public async Task<JobOfferAnalysisResponse> AnalyzeAndSaveAsync(
@@ -124,8 +127,9 @@ public class JobFitAnalyzerService : IJobFitAnalyzerService
               }
             }
             REGRA DE IDIOMA PARA "resposta_recrutador":
-            - Se a descrição/mensagem da vaga estiver em INGLÊS, escreva "linkedin" e "whatsapp" em INGLÊS.
-            - Se a descrição/mensagem da vaga estiver em PORTUGUÊS, escreva "linkedin" e "whatsapp" em PORTUGUÊS.
+            - Identifique o idioma predominante do texto original da descrição/mensagem da vaga (ex: Inglês, Português, Espanhol).
+            - Escreva 100% de "linkedin" e "whatsapp" (saudação, corpo e encerramento) exatamente no mesmo idioma predominante da descrição da vaga, ignorando o idioma da UI/análise ({{analysisLanguage}}).
+            - Write the recruiter response strictly in the exact same language as the job description below.
             - Use tom profissional, educado e natural de chat, citando brevemente aderência com a vaga e disponibilidade para conversar.
             """;
 
@@ -144,9 +148,16 @@ public class JobFitAnalyzerService : IJobFitAnalyzerService
             {qaSection}
             """;
 
+        var researchTools = mcpSession.Tools
+            .Where(t => t.Name.Contains("search", StringComparison.OrdinalIgnoreCase) ||
+                        t.Name.Contains("fetch", StringComparison.OrdinalIgnoreCase) ||
+                        t.Name.Contains("navigate", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
         var chatOptions = new ChatOptions
         {
-            Tools = mcpSession.Tools
+            Tools = researchTools.Count > 0 ? researchTools : null,
+            ResponseFormat = ChatResponseFormat.Json
         };
 
         var sw = Stopwatch.StartNew();
@@ -163,10 +174,11 @@ public class JobFitAnalyzerService : IJobFitAnalyzerService
                     chatOptions,
                     cancellationToken);
             }
-            catch (Exception) when (mcpSession.Tools.Count > 0)
+            catch (Exception ex) when (mcpSession.Tools.Count > 0)
             {
-                // Fallback para provedores/modelos que exigem thoughtSignature em multi-turn tool calling:
-                // executa as ferramentas MCP/Fetch/Search diretamente e injeta o contexto pesquisado no prompt.
+                _logger?.LogWarning(ex, "Chamada com Tools falhou; executando pesquisa direta MCP/Fetch/Search e reenviando sem Tools.");
+
+                // Executa as ferramentas MCP/Fetch/Search diretamente e injeta o contexto pesquisado no prompt.
                 var researchContext = await RunDirectResearchAsync(
                     mcpSession.Tools,
                     request,
@@ -184,7 +196,8 @@ public class JobFitAnalyzerService : IJobFitAnalyzerService
                         new ChatMessage(ChatRole.System, systemPrompt),
                         new ChatMessage(ChatRole.User, enrichedUserPrompt)
                     ],
-                    cancellationToken: cancellationToken);
+                    new ChatOptions { ResponseFormat = ChatResponseFormat.Json },
+                    cancellationToken);
             }
         }
         catch (Exception ex)
@@ -196,9 +209,7 @@ public class JobFitAnalyzerService : IJobFitAnalyzerService
 
         sw.Stop();
 
-        var cleanedJson = JsonCleanupHelper.StripMarkdownCodeFence(response.Text ?? string.Empty);
-        var parsed = JsonSerializer.Deserialize<JobAnalysisAiPayload>(cleanedJson, JsonOptions)
-            ?? throw new InvalidOperationException("A IA não retornou uma análise de vaga em JSON válido.");
+        var (cleanedJson, parsed) = await ParseOrRepromptAnalysisAsync(response, cancellationToken);
 
         var resolvedTitle = !string.IsNullOrWhiteSpace(request.Title)
             ? request.Title.Trim()
@@ -301,6 +312,9 @@ public class JobFitAnalyzerService : IJobFitAnalyzerService
                 "whatsapp": "..."
               }
             }
+            REGRA DE IDIOMA PARA "resposta_recrutador":
+            - Identifique o idioma predominante do texto original da descrição da vaga e escreva 100% de "linkedin" e "whatsapp" (saudação, corpo e encerramento) exatamente no mesmo idioma da descrição da vaga, ignorando o idioma da UI.
+            - Write the recruiter response strictly in the exact same language as the job description below.
             """;
 
         var userPrompt = $"""
@@ -321,13 +335,12 @@ public class JobFitAnalyzerService : IJobFitAnalyzerService
                 new ChatMessage(ChatRole.System, systemPrompt),
                 new ChatMessage(ChatRole.User, userPrompt)
             ],
-            cancellationToken: cancellationToken);
+            new ChatOptions { ResponseFormat = ChatResponseFormat.Json },
+            cancellationToken);
 
         sw.Stop();
 
-        var cleanedJson = JsonCleanupHelper.StripMarkdownCodeFence(response.Text ?? string.Empty);
-        var parsed = JsonSerializer.Deserialize<JobAnalysisAiPayload>(cleanedJson, JsonOptions)
-            ?? throw new InvalidOperationException("A IA não retornou JSON válido na reanálise.");
+        var (cleanedJson, parsed) = await ParseOrRepromptAnalysisAsync(response, cancellationToken);
 
         job.UserProfileId = profile.Id;
         job.FitScore = parsed.MatchScore;
@@ -362,28 +375,31 @@ public class JobFitAnalyzerService : IJobFitAnalyzerService
                 .ToListAsync(cancellationToken);
 
         var systemPrompt = """
-            Você é um assistente de carreira que redige respostas profissionais para recrutadores no LinkedIn e WhatsApp.
-            REGRA OBRIGATÓRIA DE IDIOMA:
-            - Identifique o idioma da descrição/mensagem da vaga recebida.
-            - Se estiver em INGLÊS, escreva ambas as respostas em INGLÊS.
-            - Se estiver em PORTUGUÊS, escreva ambas as respostas em PORTUGUÊS.
-            Responda EXCLUSIVAMENTE com JSON válido:
+            You are a career assistant that drafts professional recruiter replies for LinkedIn and WhatsApp.
+            MANDATORY LANGUAGE RULE:
+            - Identify the predominant language of the original job description text below (e.g., English, Portuguese, Spanish, etc.).
+            - Write 100% of both responses (greeting, body, and closing) strictly in the exact same language as the job description below.
+            - Completely ignore the UI language (pt-BR or en-US), Accept-Language, and the candidate's resume language.
+            - Write the recruiter response strictly in the exact same language as the job description below.
+            - Keep a professional, polite, and natural chat tone, briefly highlighting alignment with the role and availability to talk.
+            Respond EXCLUSIVELY with valid JSON:
             {
-              "linkedin": "Mensagem profissional e objetiva para responder no chat do LinkedIn",
-              "whatsapp": "Mensagem profissional, cordial e mais direta para responder no WhatsApp"
+              "linkedin": "Professional, concise message for LinkedIn chat",
+              "whatsapp": "Professional, warm, and direct message for WhatsApp"
             }
             """;
 
         var userPrompt = $"""
-            ## Vaga / Mensagem Recebida
-            Cargo: {job.Title}
-            Empresa: {job.Company}
-            Descrição: {job.Description}
+            ## Job Offer
+            Title: {job.Title}
+            Company: {job.Company}
+            Job Description:
+            {job.Description}
 
-            ## Candidato
-            Nome: {profile?.FullName ?? "Candidato"}
-            Currículo: {profile?.RawText ?? "(não informado)"}
-            Respostas complementares: {(qaList.Count == 0 ? "(nenhuma)" : string.Join("\n", qaList))}
+            ## Candidate
+            Name: {profile?.FullName ?? "Candidate"}
+            Resume: {profile?.RawText ?? "(not provided)"}
+            Additional Q&A: {(qaList.Count == 0 ? "(none)" : string.Join("\n", qaList))}
             """;
 
         var response = await _chatClient.GetResponseAsync(
@@ -391,7 +407,8 @@ public class JobFitAnalyzerService : IJobFitAnalyzerService
                 new ChatMessage(ChatRole.System, systemPrompt),
                 new ChatMessage(ChatRole.User, userPrompt)
             ],
-            cancellationToken: cancellationToken);
+            new ChatOptions { ResponseFormat = ChatResponseFormat.Json },
+            cancellationToken);
 
         var cleanedReplyJson = JsonCleanupHelper.StripMarkdownCodeFence(response.Text ?? string.Empty);
         using var replyDoc = JsonDocument.Parse(cleanedReplyJson);
@@ -462,7 +479,10 @@ public class JobFitAnalyzerService : IJobFitAnalyzerService
         var inputTokens = response?.Usage?.InputTokenCount ?? 0;
         var outputTokens = response?.Usage?.OutputTokenCount ?? 0;
         var totalTokens = response?.Usage?.TotalTokenCount ?? (inputTokens + outputTokens);
-        var costUsd = CareerPilotTelemetry.EstimateCostUsd(provider, model, inputTokens, outputTokens);
+        var costUsd = response?.AdditionalProperties?.TryGetValue(ResilientChatClient.EstimatedCostKey, out var ec) == true
+            && ec is decimal explicitCost
+            ? explicitCost
+            : CareerPilotTelemetry.EstimateCostUsd(provider, model, inputTokens, outputTokens);
 
         var log = new AiExecutionLog
         {
@@ -483,6 +503,54 @@ public class JobFitAnalyzerService : IJobFitAnalyzerService
 
         _dbContext.AiExecutionLogs.Add(log);
         await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task<(string CleanedJson, JobAnalysisAiPayload Payload)> ParseOrRepromptAnalysisAsync(
+        ChatResponse response,
+        CancellationToken cancellationToken)
+    {
+        var rawText = response.Text ?? string.Empty;
+        var cleanedJson = JsonCleanupHelper.StripMarkdownCodeFence(rawText);
+
+        try
+        {
+            var payload = JsonSerializer.Deserialize<JobAnalysisAiPayload>(cleanedJson, JsonOptions);
+            if (payload is not null)
+            {
+                return (cleanedJson, payload);
+            }
+        }
+        catch (JsonException ex)
+        {
+            var preview = rawText.Length > 400 ? rawText[..400] : rawText;
+            _logger?.LogWarning(ex, "Falha ao desserializar JSON da análise de vaga. Trecho bruto: {RawPreview}", preview);
+        }
+
+        // Segunda tentativa pedindo exclusivamente JSON válido a partir da resposta anterior.
+        try
+        {
+            var repairResponse = await _chatClient.GetResponseAsync(
+                [
+                    new ChatMessage(ChatRole.System,
+                        "Converta o conteúdo a seguir em um único objeto JSON válido com as chaves title, company, requirements, match_score, justificativa, pontos_fortes, gaps_e_estudos, dossie_empresa, vagas_similares_padroes e resposta_recrutador. Responda APENAS com JSON."),
+                    new ChatMessage(ChatRole.User, rawText)
+                ],
+                new ChatOptions { ResponseFormat = ChatResponseFormat.Json },
+                cancellationToken);
+
+            var repairedJson = JsonCleanupHelper.StripMarkdownCodeFence(repairResponse.Text ?? string.Empty);
+            var repairedPayload = JsonSerializer.Deserialize<JobAnalysisAiPayload>(repairedJson, JsonOptions);
+            if (repairedPayload is not null)
+            {
+                return (repairedJson, repairedPayload);
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger?.LogError(ex, "Falha definitiva ao converter resposta da IA em JSON válido.");
+        }
+
+        throw new InvalidOperationException("A IA não retornou uma análise de vaga em JSON válido após sanitização.");
     }
 
     private static async Task<string> RunDirectResearchAsync(

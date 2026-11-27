@@ -4,6 +4,7 @@ using CareerPilot.Api.Data;
 using CareerPilot.Api.DTOs;
 using CareerPilot.Api.Models;
 using CareerPilot.Api.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
@@ -95,6 +96,132 @@ public class JobFitAnalyzerEvalTests
         Assert.NotNull(response.Text);
         Assert.Equal("Ollama", response.AdditionalProperties?[ResilientChatClient.ProviderKey]?.ToString());
         Assert.Equal(true, response.AdditionalProperties?[ResilientChatClient.UsedFallbackKey]);
+    }
+
+    [Fact]
+    public async Task AnalyzeAndSaveAsync_WhenModelWrapsJsonInProseAndMarkdown_ShouldSanitizeAndSucceed()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+
+        var dbOptions = new DbContextOptionsBuilder<CareerPilotDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        await using var dbContext = new CareerPilotDbContext(dbOptions);
+        await dbContext.Database.EnsureCreatedAsync();
+
+        dbContext.UserProfiles.Add(new UserProfile
+        {
+            FullName = "Candidato Resiliente",
+            Email = "resiliente@careerpilot.local",
+            SourceType = "json",
+            RawText = "Senior .NET Engineer with C#, SQL Server, and React."
+        });
+        await dbContext.SaveChangesAsync();
+
+        var resilientClient = new ResilientChatClient(
+            new ScenarioEvalChatClient("HighMatch", wrapWithProse: true),
+            "Ollama",
+            "llama3.2",
+            null,
+            null,
+            null,
+            NullLogger<ResilientChatClient>.Instance);
+
+        var analyzer = new JobFitAnalyzerService(
+            dbContext,
+            resilientClient,
+            new NoOpMcpResearchService());
+
+        var result = await analyzer.AnalyzeAndSaveAsync(
+            new AnalyzeJobOfferRequest("Senior .NET Engineer", "FinTech Global", null, "C# and React."));
+
+        Assert.Equal(90m, result.FitScore);
+        AssertValidJobFitSchema(result.FitAnalysis!.Value);
+    }
+
+    [Fact]
+    public async Task GenerateRecruiterReplyAsync_WithEnglishJobAndPtBrAcceptLanguage_ShouldReturnEnglishReplies()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+
+        var dbOptions = new DbContextOptionsBuilder<CareerPilotDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        await using var dbContext = new CareerPilotDbContext(dbOptions);
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var profile = new UserProfile
+        {
+            FullName = "Sergio Silva",
+            Email = "sergio@careerpilot.local",
+            SourceType = "json",
+            RawText = "Engenheiro de Software Sênior com 9 anos de experiência em .NET, C# e React."
+        };
+        dbContext.UserProfiles.Add(profile);
+        await dbContext.SaveChangesAsync();
+
+        const string englishDescription =
+            "We are hiring a Senior Backend .NET Engineer to build distributed microservices in C#, ASP.NET Core, and PostgreSQL for our global platform.";
+
+        var job = new JobOffer
+        {
+            UserProfileId = profile.Id,
+            Title = "Senior Backend .NET Engineer",
+            Company = "NorthStar Cloud",
+            Description = englishDescription,
+            FitScore = 88m,
+            FitAnalysisJson = """{"match_score":88,"justificativa":"Boa aderência técnica."}"""
+        };
+        dbContext.JobOffers.Add(job);
+        await dbContext.SaveChangesAsync();
+
+        var httpContext = new DefaultHttpContext();
+        httpContext.Request.Headers.AcceptLanguage = "pt-BR";
+        var languageProvider = new RequestLanguageProvider(new HttpContextAccessor { HttpContext = httpContext });
+        Assert.False(languageProvider.IsEnglish());
+
+        var replyChatClient = new RecruiterReplyLanguageEvalChatClient();
+        var resilientClient = new ResilientChatClient(
+            replyChatClient,
+            "EvalPrimary",
+            "eval-model-v1",
+            null,
+            null,
+            null,
+            NullLogger<ResilientChatClient>.Instance);
+
+        var analyzer = new JobFitAnalyzerService(
+            dbContext,
+            resilientClient,
+            new NoOpMcpResearchService(),
+            languageProvider);
+
+        var result = await analyzer.GenerateRecruiterReplyAsync(job.Id);
+
+        Assert.NotNull(replyChatClient.CapturedSystemPrompt);
+        Assert.Contains("Write the recruiter response strictly in the exact same language as the job description below", replyChatClient.CapturedSystemPrompt);
+        Assert.Contains("pt-BR", replyChatClient.CapturedSystemPrompt);
+        Assert.NotNull(replyChatClient.CapturedUserPrompt);
+        Assert.Contains(englishDescription, replyChatClient.CapturedUserPrompt);
+
+        Assert.True(result.FitAnalysis.HasValue);
+        var root = result.FitAnalysis!.Value;
+        Assert.True(root.TryGetProperty("resposta_recrutador", out var reply) && reply.ValueKind == JsonValueKind.Object);
+
+        var linkedin = reply.GetProperty("linkedin").GetString() ?? string.Empty;
+        var whatsapp = reply.GetProperty("whatsapp").GetString() ?? string.Empty;
+
+        Assert.False(string.IsNullOrWhiteSpace(linkedin));
+        Assert.False(string.IsNullOrWhiteSpace(whatsapp));
+        Assert.Contains("Hello", linkedin, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("NorthStar Cloud", linkedin);
+        Assert.Contains("Hi", whatsapp, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Olá", linkedin, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Olá", whatsapp, StringComparison.OrdinalIgnoreCase);
     }
 
     public static IEnumerable<object[]> GetEvaluationScenarios()
@@ -189,10 +316,12 @@ public class JobFitAnalyzerEvalTests
     private sealed class ScenarioEvalChatClient : IChatClient
     {
         private readonly string _scenario;
+        private readonly bool _wrapWithProse;
 
-        public ScenarioEvalChatClient(string scenario)
+        public ScenarioEvalChatClient(string scenario, bool wrapWithProse = false)
         {
             _scenario = scenario;
+            _wrapWithProse = wrapWithProse;
         }
 
         public Task<ChatResponse> GetResponseAsync(
@@ -246,13 +375,73 @@ public class JobFitAnalyzerEvalTests
             };
 
             var json = JsonSerializer.Serialize(payload);
-            var response = new ChatResponse(new ChatMessage(ChatRole.Assistant, json))
+            var content = _wrapWithProse
+                ? $"Para analisar esta vaga, segue o resultado estruturado:\n```json\n{json}\n```\nEspero que ajude!"
+                : json;
+            var response = new ChatResponse(new ChatMessage(ChatRole.Assistant, content))
             {
                 Usage = new UsageDetails
                 {
                     InputTokenCount = 450,
                     OutputTokenCount = 320,
                     TotalTokenCount = 770
+                }
+            };
+
+            return Task.FromResult(response);
+        }
+
+        public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+            IEnumerable<ChatMessage> messages,
+            ChatOptions? options = null,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            await Task.CompletedTask;
+            yield break;
+        }
+
+        public object? GetService(Type serviceType, object? serviceKey = null) => null;
+        public void Dispose() { }
+    }
+
+    private sealed class RecruiterReplyLanguageEvalChatClient : IChatClient
+    {
+        public string? CapturedSystemPrompt { get; private set; }
+        public string? CapturedUserPrompt { get; private set; }
+
+        public Task<ChatResponse> GetResponseAsync(
+            IEnumerable<ChatMessage> messages,
+            ChatOptions? options = null,
+            CancellationToken cancellationToken = default)
+        {
+            var messageList = messages.ToList();
+            CapturedSystemPrompt = messageList.FirstOrDefault(m => m.Role == ChatRole.System)?.Text;
+            CapturedUserPrompt = messageList.FirstOrDefault(m => m.Role == ChatRole.User)?.Text;
+
+            var enforcesJobLanguage =
+                CapturedSystemPrompt?.Contains("strictly in the exact same language as the job description", StringComparison.OrdinalIgnoreCase) == true;
+            var hasEnglishJob =
+                CapturedUserPrompt?.Contains("We are hiring a Senior Backend .NET Engineer", StringComparison.Ordinal) == true;
+
+            var payload = enforcesJobLanguage && hasEnglishJob
+                ? new
+                {
+                    linkedin = "Hello! Thank you for reaching out about the Senior Backend .NET Engineer role at NorthStar Cloud. My 9 years of experience with C#, .NET, and distributed systems align closely with your team's needs, and I would be glad to connect.",
+                    whatsapp = "Hi! Thanks for sharing the Senior Backend .NET Engineer opportunity at NorthStar Cloud. I have strong experience with C# and ASP.NET Core and would love to chat when convenient."
+                }
+                : new
+                {
+                    linkedin = "Olá! Obrigado pelo contato sobre a vaga.",
+                    whatsapp = "Oi! Obrigado pela mensagem sobre a vaga."
+                };
+
+            var response = new ChatResponse(new ChatMessage(ChatRole.Assistant, JsonSerializer.Serialize(payload)))
+            {
+                Usage = new UsageDetails
+                {
+                    InputTokenCount = 220,
+                    OutputTokenCount = 110,
+                    TotalTokenCount = 330
                 }
             };
 

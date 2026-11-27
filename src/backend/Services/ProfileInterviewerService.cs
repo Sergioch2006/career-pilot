@@ -27,10 +27,11 @@ public class ProfileInterviewerService : IProfileInterviewerService
     public ProfileInterviewerService(
         CareerPilotDbContext dbContext,
         IChatClient chatClient,
-        IRequestLanguageProvider? languageProvider = null)
+        IRequestLanguageProvider? languageProvider = null,
+        IAiProviderFactory? providerFactory = null)
     {
         _dbContext = dbContext;
-        _chatClient = chatClient;
+        _chatClient = providerFactory?.GetClientForTask(Options.AiTaskType.ProfileInterviewer) ?? chatClient;
         _languageProvider = languageProvider;
     }
 
@@ -96,7 +97,8 @@ public class ProfileInterviewerService : IProfileInterviewerService
                 new ChatMessage(ChatRole.System, systemPrompt),
                 new ChatMessage(ChatRole.User, userPrompt)
             ],
-            cancellationToken: cancellationToken);
+            new ChatOptions { ResponseFormat = ChatResponseFormat.Json },
+            cancellationToken);
 
         var cleanedJson = JsonCleanupHelper.StripMarkdownCodeFence(response.Text ?? string.Empty);
         var parsed = JsonSerializer.Deserialize<GeneratedInterviewPayload>(cleanedJson, JsonOptions);

@@ -8,8 +8,10 @@ using Polly.Retry;
 
 namespace CareerPilot.Api.Services;
 
+public record ChatClientTarget(string Provider, string Model, IChatClient Client);
+
 /// <summary>
-/// Decorador de IChatClient com Polly (Retry exponencial, Circuit Breaker e Fallback para provedor secundário)
+/// Decorador de IChatClient com Polly (Retry exponencial, Circuit Breaker e cadeia de Fallback)
 /// e instrumentação OpenTelemetry (latência, tokens, provedor e custo estimado).
 /// </summary>
 public sealed class ResilientChatClient : DelegatingChatClient
@@ -17,12 +19,12 @@ public sealed class ResilientChatClient : DelegatingChatClient
     public const string ProviderKey = "CareerPilot.Provider";
     public const string ModelKey = "CareerPilot.Model";
     public const string UsedFallbackKey = "CareerPilot.UsedFallback";
+    public const string EstimatedCostKey = "CareerPilot.EstimatedCostUsd";
 
-    private readonly IChatClient? _fallbackClient;
+    private readonly IReadOnlyList<ChatClientTarget> _fallbackChain;
     private readonly string _primaryProvider;
     private readonly string _primaryModel;
-    private readonly string? _fallbackProvider;
-    private readonly string? _fallbackModel;
+    private readonly Func<string, long, long, decimal> _costEstimator;
     private readonly ILogger<ResilientChatClient> _logger;
     private readonly ResiliencePipeline<ChatResponse> _pipeline;
 
@@ -34,48 +36,94 @@ public sealed class ResilientChatClient : DelegatingChatClient
         string? fallbackProvider,
         string? fallbackModel,
         ILogger<ResilientChatClient> logger)
+        : this(
+            primaryClient,
+            primaryProvider,
+            primaryModel,
+            fallbackClient is not null && !string.IsNullOrWhiteSpace(fallbackProvider)
+                ? [new ChatClientTarget(fallbackProvider, fallbackModel ?? "unknown", fallbackClient)]
+                : [],
+            (provider, inTok, outTok) => CareerPilotTelemetry.EstimateCostUsd(provider, primaryModel, inTok, outTok),
+            logger)
+    {
+    }
+
+    public ResilientChatClient(
+        IChatClient primaryClient,
+        string primaryProvider,
+        string primaryModel,
+        IReadOnlyList<ChatClientTarget> fallbackChain,
+        Func<string, long, long, decimal> costEstimator,
+        ILogger<ResilientChatClient> logger)
         : base(primaryClient)
     {
         _primaryProvider = primaryProvider;
         _primaryModel = primaryModel;
-        _fallbackClient = fallbackClient;
-        _fallbackProvider = fallbackProvider;
-        _fallbackModel = fallbackModel;
+        _fallbackChain = fallbackChain;
+        _costEstimator = costEstimator;
         _logger = logger;
 
         var builder = new ResiliencePipelineBuilder<ChatResponse>();
 
-        if (_fallbackClient is not null)
+        if (_fallbackChain.Count > 0)
         {
             builder.AddFallback(new FallbackStrategyOptions<ChatResponse>
             {
                 ShouldHandle = new PredicateBuilder<ChatResponse>()
-                    .Handle<Exception>(ex => ex is not OperationCanceledException),
+                    .Handle<Exception>(ex =>
+                    {
+                        if (ex is OperationCanceledException) return false;
+                        return IsTransientOrProviderFailure(ex);
+                    }),
                 FallbackAction = async args =>
                 {
-                    _logger.LogWarning(
-                        args.Outcome.Exception,
-                        "Provedor primário {PrimaryProvider} ({PrimaryModel}) falhou. Acionando fallback para {FallbackProvider} ({FallbackModel}).",
-                        _primaryProvider,
-                        _primaryModel,
-                        _fallbackProvider,
-                        _fallbackModel);
+                    var messages = args.Context.Properties.GetValue(
+                        new ResiliencePropertyKey<IEnumerable<ChatMessage>>("messages"), []);
+                    var options = args.Context.Properties.GetValue(
+                        new ResiliencePropertyKey<ChatOptions?>("options"), null);
 
-                    CareerPilotTelemetry.AiFallbackCounter.Add(1,
-                        new KeyValuePair<string, object?>("primary", _primaryProvider),
-                        new KeyValuePair<string, object?>("fallback", _fallbackProvider));
+                    Exception? lastException = args.Outcome.Exception;
 
-                    var fallbackResponse = await _fallbackClient.GetResponseAsync(
-                        args.Context.Properties.GetValue(new ResiliencePropertyKey<IEnumerable<ChatMessage>>("messages"), []),
-                        args.Context.Properties.GetValue(new ResiliencePropertyKey<ChatOptions?>("options"), null),
-                        args.Context.CancellationToken);
+                    foreach (var target in _fallbackChain)
+                    {
+                        _logger.LogWarning(
+                            lastException,
+                            "Provedor {PrimaryProvider} ({PrimaryModel}) indisponível. Acionando fallback para {FallbackProvider} ({FallbackModel}).",
+                            _primaryProvider,
+                            _primaryModel,
+                            target.Provider,
+                            target.Model);
 
-                    fallbackResponse.AdditionalProperties ??= new AdditionalPropertiesDictionary();
-                    fallbackResponse.AdditionalProperties[ProviderKey] = _fallbackProvider ?? "Fallback";
-                    fallbackResponse.AdditionalProperties[ModelKey] = _fallbackModel ?? "unknown";
-                    fallbackResponse.AdditionalProperties[UsedFallbackKey] = true;
+                        CareerPilotTelemetry.AiFallbackCounter.Add(1,
+                            new KeyValuePair<string, object?>("primary", _primaryProvider),
+                            new KeyValuePair<string, object?>("fallback", target.Provider));
 
-                    return Outcome.FromResult(fallbackResponse);
+                        try
+                        {
+                            var fallbackResponse = await target.Client.GetResponseAsync(
+                                messages,
+                                options,
+                                args.Context.CancellationToken);
+
+                            fallbackResponse.AdditionalProperties ??= new AdditionalPropertiesDictionary();
+                            fallbackResponse.AdditionalProperties[ProviderKey] = target.Provider;
+                            fallbackResponse.AdditionalProperties[ModelKey] = target.Model;
+                            fallbackResponse.AdditionalProperties[UsedFallbackKey] = true;
+
+                            return Outcome.FromResult(fallbackResponse);
+                        }
+                        catch (Exception ex) when (ex is not OperationCanceledException)
+                        {
+                            lastException = ex;
+                            _logger.LogWarning(
+                                ex,
+                                "Fallback {FallbackProvider} ({FallbackModel}) também falhou (serviço offline ou erro). Tentando próximo da cadeia.",
+                                target.Provider,
+                                target.Model);
+                        }
+                    }
+
+                    throw lastException ?? new InvalidOperationException("Todos os provedores de IA da cadeia falharam.");
                 }
             });
         }
@@ -87,7 +135,7 @@ public sealed class ResilientChatClient : DelegatingChatClient
             MinimumThroughput = 3,
             BreakDuration = TimeSpan.FromSeconds(30),
             ShouldHandle = new PredicateBuilder<ChatResponse>()
-                .Handle<Exception>(ex => ex is not OperationCanceledException),
+                .Handle<Exception>(IsTransientException),
             OnOpened = args =>
             {
                 _logger.LogWarning("Circuit breaker aberto para {Provider} por {Duration}s.", _primaryProvider, args.BreakDuration.TotalSeconds);
@@ -102,7 +150,7 @@ public sealed class ResilientChatClient : DelegatingChatClient
             BackoffType = DelayBackoffType.Exponential,
             UseJitter = true,
             ShouldHandle = new PredicateBuilder<ChatResponse>()
-                .Handle<Exception>(ex => ex is not OperationCanceledException),
+                .Handle<Exception>(IsTransientException),
             OnRetry = args =>
             {
                 _logger.LogWarning(
@@ -167,7 +215,7 @@ public sealed class ResilientChatClient : DelegatingChatClient
         }
     }
 
-    private static void RecordTelemetry(Activity? activity, ChatResponse response, double latencyMs)
+    private void RecordTelemetry(Activity? activity, ChatResponse response, double latencyMs)
     {
         var provider = response.AdditionalProperties?.TryGetValue(ProviderKey, out var p) == true
             ? p?.ToString() ?? "unknown"
@@ -180,7 +228,10 @@ public sealed class ResilientChatClient : DelegatingChatClient
 
         var inputTokens = response.Usage?.InputTokenCount ?? 0;
         var outputTokens = response.Usage?.OutputTokenCount ?? 0;
-        var costUsd = CareerPilotTelemetry.EstimateCostUsd(provider, model, inputTokens, outputTokens);
+        var costUsd = _costEstimator(provider, inputTokens, outputTokens);
+
+        response.AdditionalProperties ??= new AdditionalPropertiesDictionary();
+        response.AdditionalProperties[EstimatedCostKey] = costUsd;
 
         activity?.SetTag("ai.provider", provider);
         activity?.SetTag("ai.model", model);
@@ -202,5 +253,44 @@ public sealed class ResilientChatClient : DelegatingChatClient
         if (inputTokens > 0) CareerPilotTelemetry.AiInputTokensCounter.Add(inputTokens, tags);
         if (outputTokens > 0) CareerPilotTelemetry.AiOutputTokensCounter.Add(outputTokens, tags);
         if (costUsd > 0) CareerPilotTelemetry.AiCostCounter.Add((double)costUsd, tags);
+    }
+
+    private static bool IsTransientException(Exception ex)
+    {
+        if (ex is OperationCanceledException)
+        {
+            return false;
+        }
+
+        var msg = ex.ToString();
+        if (msg.Contains("400", StringComparison.Ordinal) ||
+            msg.Contains("INVALID_ARGUMENT", StringComparison.OrdinalIgnoreCase) ||
+            msg.Contains("401", StringComparison.Ordinal) ||
+            msg.Contains("403", StringComparison.Ordinal) ||
+            msg.Contains("404", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return ex is HttpRequestException or TimeoutException ||
+               msg.Contains("429", StringComparison.Ordinal) ||
+               msg.Contains("500", StringComparison.Ordinal) ||
+               msg.Contains("502", StringComparison.Ordinal) ||
+               msg.Contains("503", StringComparison.Ordinal) ||
+               msg.Contains("504", StringComparison.Ordinal) ||
+               msg.Contains("BrokenCircuitException", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsTransientOrProviderFailure(Exception ex)
+    {
+        var msg = ex.ToString();
+        if (msg.Contains("INVALID_ARGUMENT", StringComparison.OrdinalIgnoreCase) ||
+            msg.Contains("Status: 400", StringComparison.OrdinalIgnoreCase) ||
+            msg.Contains("\"code\": 400", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return true;
     }
 }

@@ -27,10 +27,13 @@ public class InterviewPdfService : IInterviewPdfService
     private readonly CareerPilotDbContext _dbContext;
     private readonly IChatClient _chatClient;
 
-    public InterviewPdfService(CareerPilotDbContext dbContext, IChatClient chatClient)
+    public InterviewPdfService(
+        CareerPilotDbContext dbContext,
+        IChatClient chatClient,
+        IAiProviderFactory? providerFactory = null)
     {
         _dbContext = dbContext;
-        _chatClient = chatClient;
+        _chatClient = providerFactory?.GetClientForTask(Options.AiTaskType.InterviewGuide) ?? chatClient;
     }
 
     public async Task<(byte[] PdfBytes, string FileName)> GenerateInterviewGuidePdfAsync(
@@ -135,7 +138,8 @@ public class InterviewPdfService : IInterviewPdfService
                 new ChatMessage(ChatRole.System, systemPrompt),
                 new ChatMessage(ChatRole.User, userPrompt)
             ],
-            cancellationToken: cancellationToken);
+            new ChatOptions { ResponseFormat = ChatResponseFormat.Json },
+            cancellationToken);
 
         var cleaned = JsonCleanupHelper.StripMarkdownCodeFence(response.Text ?? string.Empty);
         return JsonSerializer.Deserialize<InterviewScriptPayload>(cleaned, JsonOptions)

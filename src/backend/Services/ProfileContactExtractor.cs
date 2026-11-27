@@ -32,10 +32,11 @@ public class ProfileContactExtractor : IProfileContactExtractor
 
     public ProfileContactExtractor(
         ILogger<ProfileContactExtractor> logger,
-        IChatClient? chatClient = null)
+        IChatClient? chatClient = null,
+        IAiProviderFactory? providerFactory = null)
     {
         _logger = logger;
-        _chatClient = chatClient;
+        _chatClient = providerFactory?.GetClientForTask(Options.AiTaskType.ProfileIngestion) ?? chatClient;
     }
 
     public async Task<(string? FullName, string? Email)> ExtractMissingAsync(

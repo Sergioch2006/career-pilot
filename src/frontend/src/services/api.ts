@@ -24,7 +24,7 @@ async function parseErrorMessage(response: Response): Promise<string> {
 }
 
 export async function getLatestProfile(): Promise<ProfileResponse | null> {
-  const response = await apiFetch('/api/profile/latest');
+  const response = await apiFetch('/api/profiles/latest');
   if (response.status === 404) {
     return null;
   }
@@ -92,7 +92,7 @@ export async function importProfileText(payload: {
   fullName?: string;
   email?: string;
 }): Promise<ProfileResponse> {
-  const response = await apiFetch('/api/profile/import', {
+  const response = await apiFetch('/api/profiles/import', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -117,7 +117,7 @@ export async function importProfileFile(
     formData.append('email', email.trim());
   }
 
-  const response = await apiFetch('/api/profile/import', {
+  const response = await apiFetch('/api/profiles/import', {
     method: 'POST',
     body: formData,
   });

@@ -54,10 +54,11 @@ public class AtsResumeService : IAtsResumeService
     public AtsResumeService(
         CareerPilotDbContext dbContext,
         IChatClient chatClient,
-        IHostEnvironment environment)
+        IHostEnvironment environment,
+        IAiProviderFactory? providerFactory = null)
     {
         _dbContext = dbContext;
-        _chatClient = chatClient;
+        _chatClient = providerFactory?.GetClientForTask(Options.AiTaskType.AtsResumeGenerator) ?? chatClient;
         _environment = environment;
     }
 
@@ -240,7 +241,8 @@ public class AtsResumeService : IAtsResumeService
                 new ChatMessage(ChatRole.System, systemPrompt),
                 new ChatMessage(ChatRole.User, userPrompt)
             ],
-            cancellationToken: cancellationToken);
+            new ChatOptions { ResponseFormat = ChatResponseFormat.Json },
+            cancellationToken);
 
         var cleaned = JsonCleanupHelper.StripMarkdownCodeFence(response.Text ?? string.Empty);
         return JsonSerializer.Deserialize<AtsResumePayload>(cleaned, JsonOptions)

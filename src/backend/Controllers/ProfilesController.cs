@@ -1,6 +1,7 @@
 using System.Text.Json;
 using CareerPilot.Api.Data;
 using CareerPilot.Api.DTOs;
+using CareerPilot.Api.Models;
 using CareerPilot.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace CareerPilot.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/profiles")]
 public class ProfilesController : ControllerBase
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -43,7 +44,79 @@ public class ProfilesController : ControllerBase
             .ThenByDescending(p => p.Id)
             .ToListAsync(cancellationToken);
 
-        return Ok(profiles.Select(ProfileController.MapToResponse));
+        return Ok(profiles.Select(MapToResponse));
+    }
+
+    [HttpGet("latest")]
+    [HttpGet("/api/profile/latest")]
+    [ProducesResponseType(typeof(ProfileImportResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetLatest(CancellationToken cancellationToken)
+    {
+        var profile = await _dbContext.UserProfiles
+            .AsNoTracking()
+            .OrderByDescending(p => p.UpdatedAt)
+            .ThenByDescending(p => p.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (profile is null)
+        {
+            return NotFound(new { error = "Nenhum perfil importado ainda." });
+        }
+
+        return Ok(MapToResponse(profile));
+    }
+
+    [HttpGet("{id:int}")]
+    [HttpGet("/api/profile/{id:int}")]
+    [ProducesResponseType(typeof(ProfileImportResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
+    {
+        var profile = await _dbContext.UserProfiles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+
+        if (profile is null)
+        {
+            return NotFound(new { error = $"Perfil {id} não encontrado." });
+        }
+
+        return Ok(MapToResponse(profile));
+    }
+
+    /// <summary>
+    /// Importa um perfil via texto colado (application/json) ou upload de arquivo .pdf / .docx (multipart/form-data).
+    /// </summary>
+    [HttpPost("import")]
+    [HttpPost("/api/profile/import")]
+    [ProducesResponseType(typeof(ProfileImportResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status415UnsupportedMediaType)]
+    public async Task<IActionResult> Import(CancellationToken cancellationToken)
+    {
+        var (payload, errorResult) = await ParseProfileRequestAsync(cancellationToken);
+        if (errorResult is not null || payload is null)
+        {
+            return errorResult!;
+        }
+
+        var now = DateTime.UtcNow;
+        var profile = new UserProfile
+        {
+            FullName = payload.FullName,
+            Email = payload.Email,
+            SourceType = payload.SourceType,
+            SourceFileName = payload.SourceFileName,
+            RawText = payload.RawText,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        _dbContext.UserProfiles.Add(profile);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return CreatedAtAction(nameof(GetById), new { id = profile.Id }, MapToResponse(profile));
     }
 
     [HttpPut("{id:int}")]
@@ -59,82 +132,17 @@ public class ProfilesController : ControllerBase
             return NotFound(new { error = $"Perfil {id} não encontrado." });
         }
 
-        string rawText;
-        string sourceType;
-        string? sourceFileName = null;
-        string? providedFullName;
-        string? providedEmail;
-
-        if (Request.HasFormContentType)
+        var (payload, errorResult) = await ParseProfileRequestAsync(cancellationToken);
+        if (errorResult is not null || payload is null)
         {
-            var form = await Request.ReadFormAsync(cancellationToken);
-            var file = form.Files.GetFile("file") ?? form.Files.FirstOrDefault();
-            if (file is null || file.Length == 0)
-            {
-                return BadRequest(new { error = "Nenhum arquivo válido foi enviado." });
-            }
-
-            var extension = Path.GetExtension(file.FileName);
-            if (!_textExtractionService.IsSupportedExtension(extension))
-            {
-                return BadRequest(new { error = "Formato não suportado. Envie .pdf ou .docx." });
-            }
-
-            await using var stream = file.OpenReadStream();
-            rawText = await _textExtractionService.ExtractTextAsync(stream, extension, cancellationToken);
-            if (string.IsNullOrWhiteSpace(rawText))
-            {
-                return BadRequest(new { error = "Não foi possível extrair texto do arquivo enviado." });
-            }
-
-            sourceType = extension.TrimStart('.').ToLowerInvariant();
-            sourceFileName = Path.GetFileName(file.FileName);
-            providedFullName = form.TryGetValue("fullName", out var fn) ? fn.ToString() : null;
-            providedEmail = form.TryGetValue("email", out var em) ? em.ToString() : null;
-        }
-        else if (Request.ContentType?.Contains("application/json", StringComparison.OrdinalIgnoreCase) == true)
-        {
-            ProfileImportJsonRequest? request;
-            try
-            {
-                request = await JsonSerializer.DeserializeAsync<ProfileImportJsonRequest>(
-                    Request.Body,
-                    JsonOptions,
-                    cancellationToken);
-            }
-            catch (JsonException)
-            {
-                return BadRequest(new { error = "JSON inválido." });
-            }
-
-            if (request is null || string.IsNullOrWhiteSpace(request.Text))
-            {
-                return BadRequest(new { error = "O campo 'text' é obrigatório." });
-            }
-
-            rawText = request.Text.Trim();
-            sourceType = "json";
-            providedFullName = request.FullName;
-            providedEmail = request.Email;
-        }
-        else
-        {
-            return StatusCode(
-                StatusCodes.Status415UnsupportedMediaType,
-                new { error = "Content-Type deve ser 'application/json' ou 'multipart/form-data'." });
+            return errorResult!;
         }
 
-        var (fullName, email) = await _contactExtractor.ExtractMissingAsync(
-            rawText,
-            providedFullName,
-            providedEmail,
-            cancellationToken);
-
-        profile.FullName = fullName ?? profile.FullName;
-        profile.Email = email ?? profile.Email;
-        profile.SourceType = sourceType;
-        profile.SourceFileName = sourceFileName;
-        profile.RawText = rawText;
+        profile.FullName = payload.FullName ?? profile.FullName;
+        profile.Email = payload.Email ?? profile.Email;
+        profile.SourceType = payload.SourceType;
+        profile.SourceFileName = payload.SourceFileName;
+        profile.RawText = payload.RawText;
         profile.UpdatedAt = DateTime.UtcNow;
 
         // Marca todas as vagas vinculadas (ou legadas sem vínculo) como Reanalyzing antes de enfileirar.
@@ -156,7 +164,7 @@ public class ProfilesController : ControllerBase
             await _reanalysisQueue.EnqueueProfileReanalysisAsync(profile.Id, cancellationToken);
         }
 
-        return Ok(ProfileController.MapToResponse(profile));
+        return Ok(MapToResponse(profile));
     }
 
     [HttpDelete("{id:int}")]
@@ -207,6 +215,84 @@ public class ProfilesController : ControllerBase
         return NoContent();
     }
 
+    private async Task<(ParsedProfilePayload? Payload, IActionResult? ErrorResult)> ParseProfileRequestAsync(
+        CancellationToken cancellationToken)
+    {
+        string rawText;
+        string sourceType;
+        string? sourceFileName = null;
+        string? providedFullName;
+        string? providedEmail;
+
+        if (Request.HasFormContentType)
+        {
+            var form = await Request.ReadFormAsync(cancellationToken);
+            var file = form.Files.GetFile("file") ?? form.Files.FirstOrDefault();
+            if (file is null || file.Length == 0)
+            {
+                return (null, BadRequest(new { error = "Nenhum arquivo válido foi enviado no formulário." }));
+            }
+
+            var extension = Path.GetExtension(file.FileName);
+            if (!_textExtractionService.IsSupportedExtension(extension))
+            {
+                return (null, BadRequest(new { error = "Formato de arquivo não suportado. Envie um arquivo .pdf ou .docx." }));
+            }
+
+            await using var stream = file.OpenReadStream();
+            rawText = await _textExtractionService.ExtractTextAsync(stream, extension, cancellationToken);
+            if (string.IsNullOrWhiteSpace(rawText))
+            {
+                return (null, BadRequest(new { error = "Não foi possível extrair texto do arquivo enviado." }));
+            }
+
+            sourceType = extension.TrimStart('.').ToLowerInvariant();
+            sourceFileName = Path.GetFileName(file.FileName);
+            providedFullName = form.TryGetValue("fullName", out var fn) ? fn.ToString() : null;
+            providedEmail = form.TryGetValue("email", out var em) ? em.ToString() : null;
+        }
+        else if (Request.ContentType?.Contains("application/json", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            ProfileImportJsonRequest? request;
+            try
+            {
+                request = await JsonSerializer.DeserializeAsync<ProfileImportJsonRequest>(
+                    Request.Body,
+                    JsonOptions,
+                    cancellationToken);
+            }
+            catch (JsonException)
+            {
+                return (null, BadRequest(new { error = "JSON inválido." }));
+            }
+
+            if (request is null || string.IsNullOrWhiteSpace(request.Text))
+            {
+                return (null, BadRequest(new { error = "O campo 'text' é obrigatório e não pode estar vazio." }));
+            }
+
+            rawText = request.Text.Trim();
+            sourceType = "json";
+            providedFullName = request.FullName;
+            providedEmail = request.Email;
+        }
+        else
+        {
+            var unsupported = StatusCode(
+                StatusCodes.Status415UnsupportedMediaType,
+                new { error = "Content-Type deve ser 'application/json' ou 'multipart/form-data'." });
+            return (null, unsupported);
+        }
+
+        var (fullName, email) = await _contactExtractor.ExtractMissingAsync(
+            rawText,
+            providedFullName,
+            providedEmail,
+            cancellationToken);
+
+        return (new ParsedProfilePayload(rawText, sourceType, sourceFileName, fullName, email), null);
+    }
+
     private async Task DeleteSqliteVecEmbeddingsAsync(int profileId, CancellationToken cancellationToken)
     {
         var connection = _dbContext.Database.GetDbConnection();
@@ -244,4 +330,23 @@ public class ProfilesController : ControllerBase
             }
         }
     }
+
+    private static ProfileImportResponse MapToResponse(UserProfile profile) => new(
+        profile.Id,
+        profile.SourceType,
+        profile.SourceFileName,
+        profile.FullName,
+        profile.Email,
+        profile.RawText.Length,
+        profile.RawText,
+        profile.CreatedAt,
+        profile.UpdatedAt
+    );
+
+    private sealed record ParsedProfilePayload(
+        string RawText,
+        string SourceType,
+        string? SourceFileName,
+        string? FullName,
+        string? Email);
 }
